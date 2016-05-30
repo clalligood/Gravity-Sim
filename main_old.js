@@ -24,18 +24,27 @@ ASSET_MANAGER.downloadAll(function () {
 
 
     var gameEngine = new GameEngine();
+   // var human = new Human(gameEngine);
+   // circle.setIt();
+   // gameEngine.addEntity(circle);
+    var human;
+    for (var i = 0; i < 12; i++) {
+        human = new Human(gameEngine);
+        gameEngine.addEntity(human);
+    }
 
-    // var largeBody;
-    // for (var i = 0; i < 1; i++) {
-    //     largeBody = new LargeBody(gameEngine);
-    //     gameEngine.addEntity(largeBody);
-    // }
+    // Populate the world with resources
+    var resource;
+    for (var i = 0; i < 12; i++) {
+        resource = new Resource(gameEngine);
+        gameEngine.addEntity(resource);
+    }
 
     //Populate the world with land
-    var particle;
-    for (var i = 0; i < 10; i++) {
-        particle = new Particle(gameEngine);
-        gameEngine.addEntity(particle);
+    var land;
+    for (var i = 0; i < 5; i++) {
+        land = new Land(gameEngine);
+        gameEngine.addEntity(land);
     }
 
     gameEngine.init(ctx);

@@ -95,8 +95,15 @@ GameEngine.prototype.startInput = function () {
 }
 
 GameEngine.prototype.addEntity = function (entity) {
-    console.log('added entity');
     this.entities.push(entity);
+}
+
+GameEngine.prototype.removeEntity = function (entity) {
+    this.entities.forEach(function (item, index, object) {
+        if (item === entity) {
+            object.splice(index);
+        }
+    });
 }
 
 GameEngine.prototype.draw = function () {
@@ -110,6 +117,10 @@ GameEngine.prototype.draw = function () {
 
 GameEngine.prototype.update = function () {
     var entitiesCount = this.entities.length;
+
+    if (entitiesCount > 1000) {
+        throw new Error("Something went badly wrong!");
+    }
 
     for (var i = 0; i < entitiesCount; i++) {
         var entity = this.entities[i];

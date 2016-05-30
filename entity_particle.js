@@ -9,25 +9,18 @@ function rollDice(count, sides) {
     return total;
 }
 
-function Human(game) {
+function Particle(game) {
     this.home;
     this.status;
-    this.strength = rollDice(2, 6) + 3;
-    this.dexterity = rollDice(2, 6) + 3;
-    this.constitution = rollDice(2, 6) + 3;
-    this.intelligence = rollDice(2, 6) + 3;
-    this.wisdom = rollDice(2, 6) + 3;
-    this.charisma = rollDice(2, 6) + 3;
+    this.radius = Math.random() * 10 + Math.random() * 10 + 2;
+    this.angle = {x: rollDice(4, 6) + 3, y: rollDice(4, 6) + 3};
+    this.spin = rollDice(2, 6) - 6;
+    this.density = (Math.random() * 100) + 1;
+    this.x = 0;
+    this.y = 0;
 
-    this.objectCarried = false;
-    this.maxWeight = this.strength * 10;
-    this.carriedWeight = 0;
+    this.visualRadius = this.radius * this.density;
 
-    this.statuses = ["wandering", "resource", "mating", "synthesizing"];
-    this.radius = 10;
-    this.visualRadius = 200;
-    this.colors = ["Red", "Green", "Blue", "White"];
-    this.setNotIt();
     Entity.call(this, game, this.radius + Math.random() * (800 - this.radius * 2), this.radius + Math.random() * (800 - this.radius * 2));
 
     this.velocity = { x: Math.random() * 1000, y: Math.random() * 1000 };
@@ -40,70 +33,68 @@ function Human(game) {
     }
 };
 
-Human.prototype = new Entity();
-Human.prototype.constructor = Human;
+Particle.prototype = new Entity();
+Particle.prototype.constructor = Particle;
 
-Human.prototype.setIt = function () {
-    this.it = true;
-    this.color = 0;
-    this.visualRadius = 500;
-};
-
-Human.prototype.setNotIt = function () {
-    this.it = false;
-    this.color = 3;
-    this.visualRadius = 200;
-};
-
-Human.prototype.collide = function (other) {
+Particle.prototype.collide = function (other) {
     return distance(this, other) < this.radius + other.radius;
 };
 
-Human.prototype.collideLeft = function () {
+Particle.prototype.collideLeft = function () {
     return (this.x - this.radius) < 0;
 };
 
-Human.prototype.collideRight = function () {
+Particle.prototype.collideRight = function () {
     return (this.x + this.radius) > 800;
 };
 
-Human.prototype.collideTop = function () {
+Particle.prototype.collideTop = function () {
     return (this.y - this.radius) < 0;
 };
 
-Human.prototype.collideBottom = function () {
+Particle.prototype.collideBottom = function () {
     return (this.y + this.radius) > 800;
 };
 
-Human.prototype.touchTopOf = function(r1, r2) {
-    return (r1.y <= r2.y);
+Particle.prototype.setSize = function(size) {
+    this.radius = size;
 };
 
-Human.prototype.touchBottomOf = function(r1, r2) {
-    return (r1.y >= r2.y);
+Particle.prototype.setDensity = function(density) {
+    this.density = density;
 };
 
-Human.prototype.touchLeftOf = function(r1, r2) {
-    return (r1.x <= r2.x);
+Particle.prototype.energy = function() {
+    return parseFloat((this.radius * this.density) * Math.sqrt((Math.abs(this.velocity.x) + (Math.abs(this.velocity.y)))));
 };
 
-Human.prototype.touchRightOf = function(r1, r2) {
-    return (r1.x >= r2.x);
+Particle.prototype.explode = function (x, y) {
+    this.generateChildren(x, y);
+    this.removeFromWorld = true;
 };
 
-Human.prototype.setHome = function(home) {
-    this.home = home;
+Particle.prototype.generateChildren = function (x, y) {
+    var count = parseInt(Math.random() * 4) + 1;
+    console.log(count);
+    var particle;
+    for (var i = 0; i < count; i++) {
+        if (this.game.entities.length > 1000) {
+            throw new Error("We looping");
+        }
+        particle = new Particle(this.game);
+        particle.setSize(this.radius / count);
+        particle.setDensity(this.density);
+        particle.x = parseInt(parseInt(this.x) + i);
+        particle.y = parseInt(parseInt(this.y) + i);
+        console.log("Made a particle: ");
+        particle.velocity.x = x * (1 + Math.random() * .2);
+        particle.velocity.y = y * (1 + Math.random() * .2);
+        this.game.addEntity(particle);
+    }
 };
 
-Human.prototype.exile = function() {
-    this.home = null;
-    this.velocity.x = this.oldVelocity.x;
-    this.velocity.y = this.oldVelocity.y;
-};
-
-Human.prototype.update = function () {
+Particle.prototype.update = function () {
     Entity.prototype.update.call(this);
-    //  console.log(this.velocity);
 
     this.x += this.velocity.x * this.game.clockTick;
     this.y += this.velocity.y * this.game.clockTick;
@@ -140,57 +131,39 @@ Human.prototype.update = function () {
             this.y += difY * delta / 2;
 
 
-            if (ent instanceof Human) {
-                ent.x -= difX * delta / 2;
-                ent.y -= difY * delta / 2;
-                this.velocity.x = ent.velocity.x * friction;
-                this.velocity.y = ent.velocity.y * friction;
-                ent.velocity.x = temp.x * friction;
-                ent.velocity.y = temp.y * friction;
-                this.x += this.velocity.x * this.game.clockTick;
-                this.y += this.velocity.y * this.game.clockTick;
-                ent.x += ent.velocity.x * this.game.clockTick;
-                ent.y += ent.velocity.y * this.game.clockTick;
-            } else if (ent instanceof Resource) {
-
-                //Set this player to collecting
-                if (this.status != this.statuses[1]) {
-                    this.status = this.statuses[1];
-                    this.oldVelocity.x = this.velocity.x;
-                    this.oldVelocity.y = this.velocity.y;
-                }
-
-                if (this.maxWeight > this.carriedWeight) {
-                    this.carriedWeight += ent.weight;
-                    this.objectCarried = ent.object;
-                    this.velocity.x = 0;
-                    this.velocity.y = 0;
-                }
-
-                // if (this.touchTopOf(this, ent)) {
-                //     this.velocity.y = -this.velocity.y;
-                // }
-                // else if (this.touchBottomOf(this, ent)) {
-                //     this.velocity.y = Math.abs(this.velocity.y);
-                // }
-                // if (this.touchLeftOf(this, ent)) {
-                //     this.velocity.x = -this.velocity.x;
-                // }
-                // else if (this.touchRightOf(this, ent)) {
-                //     this.velocity.x = Math.abs(this.velocity.x);
-                // }
-                // this.x += this.velocity.x * this.game.clockTick;
-                // this.y += this.velocity.y * this.game.clockTick;
-            } else if (ent instanceof Land) {
-                if(this.home == false) {
-                    this.home = ent;
+            if (ent instanceof Particle) {
+                if ((this.energy() / ent.energy()) > 1.5) {
+                    if (ent.radius <= 2) {
+                        this.radius += (ent.radius / 2);
+                        ent.removeFromWorld = true;
+                    } else {
+                        ent.explode(this.velocity.x, this.velocity.y);
+                    }
+                    this.velocity.x *= (1 - (ent.energy() / this.energy()));
+                    this.velocity.y *= (1 - (ent.energy() / this.energy()));
+                } else if ((this.energy() / ent.energy()) > 1.5) {
+                    if (this.radius <= 2) {
+                        ent.radius += (this.radius / 2);
+                        this.removeFromWorld = true;
+                    } else {
+                        this.explode(ent.velocity.x, ent.velocity.y);
+                    }
+                    ent.velocity.x *= (1 - (this.energy() / ent.energy()));
+                    ent.velocity.y *= (1 - (this.energy() / ent.energy()));
+                } else {
+                    ent.x -= difX * delta / 2;
+                    ent.y -= difY * delta / 2;
+                    this.velocity.x
+                        = ent.velocity.x * friction;
+                    this.velocity.y = ent.velocity.y * friction;
+                    ent.velocity.x = temp.x * friction;
+                    ent.velocity.y = temp.y * friction;
+                    this.x += this.velocity.x * this.game.clockTick;
+                    this.y += this.velocity.y * this.game.clockTick;
+                    ent.x += ent.velocity.x * this.game.clockTick;
+                    ent.y += ent.velocity.y * this.game.clockTick;
                 }
             }
-        }
-
-        if (this.status == this.statuses[1] && this.carriedWeight >= this.maxWeight) {
-            this.velocity = this.oldVelocity;
-            this.status = this.statuses[0];
         }
 
         //Look for...
@@ -228,10 +201,10 @@ Human.prototype.update = function () {
     this.velocity.y -= (1 - friction) * this.game.clockTick * this.velocity.y;
 };
 
-Human.prototype.draw = function (ctx) {
+Particle.prototype.draw = function (ctx) {
     ctx.beginPath();
-    var alpha = (this.carriedWeight / this.maxWeight) + .1;
-    ctx.fillStyle = "rgba(255, 255, 255, " + alpha + ")";
+    var alpha = (this.density / 101) + .1;
+    ctx.fillStyle = "rgba(255, 0, 255, " + alpha + ")";
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
     ctx.fill();
     ctx.closePath();
