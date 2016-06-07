@@ -9,8 +9,7 @@ function rollDice(count, sides) {
     return total;
 }
 
-function Particle(game) {
-    this.home;
+function Particle(game, data) {
     this.status;
     this.radius = Math.random() * 10 + 1;
     this.density = (Math.random() * 100) + 1;
@@ -20,11 +19,25 @@ function Particle(game) {
     this.r = parseInt(rollDice(1, 200) + 54);
     this.g = parseInt(rollDice(1, 200) + 54);
     this.b = parseInt(rollDice(1, 200) + 54);
-    this.visualRadius = this.radius * 2255;
+    //this.visualRadius = this.radius * 2255;
 
     Entity.call(this, game, this.radius + Math.random() * (800 - this.radius * 2), this.radius + Math.random() * (800 - this.radius * 2));
 
     this.velocity = { x: Math.random() * 26 - 13, y: Math.random() * 26 - 13};
+
+    if (data) {
+        this.status = data.status;
+        this.radius = data.radius;
+        this.density = data.density;
+        this.targetRadius = data.targetRadius;
+        this.x = data.x;
+        this.y = data.y;
+        this.velocity = data.velocity;
+        this.r = data.r;
+        this.g = data.g;
+        this.b = data.b;
+    }
+
     this.oldVelocity = {x: 0, y: 0};
     var speed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
     if (speed > maxSpeed) {
@@ -150,7 +163,7 @@ Particle.prototype.update = function () {
             if (ent instanceof Particle) {
                 if ((this.energy() / ent.energy()) > 1.1) {
                     if (ent.radius / this.radius <= 0.2) {
-                        this.targetRadius += (ent.radius / 2);
+                        this.targetRadius =  Math.sqrt(ent.radius * ent.radius + this.radius * this.radius);
                         ent.removeFromWorld = true;
                     } else {
                         ent.explode(this.velocity.x, this.velocity.y);
@@ -173,7 +186,7 @@ Particle.prototype.update = function () {
                     //this.velocity.y *= (1 - (ent.energy() / this.energy()));
                 } else if ((ent.energy() / this.energy()) > 1.1 ) {
                     if (this.radius / ent.radius <= 0.2) {
-                        ent.targetRadius += (this.radius / 2);
+                        ent.targetRadius = Math.sqrt(ent.radius * ent.radius + this.radius * this.radius);
                         this.removeFromWorld = true;
                     } else {
                         this.explode(ent.velocity.x, ent.velocity.y);
