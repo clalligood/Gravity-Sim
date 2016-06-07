@@ -9,14 +9,10 @@ function distance(a, b) {
 
 // the "main" code begins here
 var friction = 1;
-var acceleration = 1000000;
-var maxSpeed = 200;
 
 var ASSET_MANAGER = new AssetManager();
 
-ASSET_MANAGER.queueDownload("./img/960px-Blank_Go_board.png");
-ASSET_MANAGER.queueDownload("./img/black.png");
-ASSET_MANAGER.queueDownload("./img/white.png");
+ASSET_MANAGER.queueDownload("./img/radpills.png");
 
 ASSET_MANAGER.downloadAll(function () {
     var canvas = document.getElementById('gameWorld');
@@ -33,7 +29,13 @@ ASSET_MANAGER.downloadAll(function () {
 
     //Populate the world with land
     var particle;
-    for (var i = 0; i < 10; i++) {
+    // particle = new Particle(gameEngine);
+    // particle.x = 400;
+    // particle.y = 400;
+    // particle.velocity = {x: 0, y: 0};
+    // particle.radius = 25;
+    // gameEngine.addEntity(particle);
+    for (var i = 0; i < 50; i++) {
         particle = new Particle(gameEngine);
         gameEngine.addEntity(particle);
     }
